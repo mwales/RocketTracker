@@ -5,49 +5,36 @@
 #ifdef ARDUINO
 
 #include <SPI.h>
-#include <LoRa.h>
+#include <RH_RF95.h>
 
-//  //LoR32u4 433MHz V1.0 (white board)
-//  #define SCK     15
-//  #define MISO    14
-//  #define MOSI    16
-//  #define SS      1
-//  #define RST     4
-//  #define DI0     7
-//  #define BAND    433E6 
-//  #define PABOOST true
+/* for feather32u4 
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 7
+*/
+ 
+// for feather m0  
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 3
 
-//  //LoR32u4 433MHz V1.2 (white board)
-//  #define SCK     15
-//  #define MISO    14
-//  #define MOSI    16
-//  #define SS      8
-//  #define RST     4
-//  #define DI0     7
-//  #define BAND    433E6 
-//  #define PABOOST true 
-
-  //LoR32u4II 868MHz or 915MHz (black board)
-  #define SCK     15
-  #define MISO    14
-  #define MOSI    16
-  #define SS      8
-  #define RST     4
-  #define DI0     7
-  #define BAND    915E6 // 868E6  // 915E6
-  #define PABOOST true 
-
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF95_FREQ 915.0
+ 
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 int counter = 0;
 void sendHelloPacket()
 {
   Serial.print("Sending packet: ");
   Serial.println(counter);
-  
-  LoRa.beginPacket();
-  LoRa.print("hello ");
-  LoRa.print(counter);
-  LoRa.endPacket();
+
+  char msgBuf[20];
+  sprintf(msgBuf, "hello %d", counter);
+  rf95.send( (uint8_t*) msgBuf, strlen(msgBuf) + 1);
+  rf95.waitPacketSent();
+
   counter++;
 }
 
@@ -84,22 +71,56 @@ void checkLoraState()
 
 #define GPSSerial Serial1
 
+void loraSetup()
+{
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+ 
+  delay(100);
+ 
+  Serial.println("Feather LoRa TX Test!");
+ 
+  // manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+ 
+  while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+    while (1);
+  }
+  Serial.println("LoRa radio init OK!");
+ 
+  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("setFrequency failed");
+    while (1);
+  }
+  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+  
+  // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
+ 
+  // The default transmitter power is 13dBm, using PA_BOOST.
+  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
+  // you can set transmitter powers from 5 to 23 dBm:
+  rf95.setTxPower(23, false);
+}
 
 void setup()
 {
 #ifdef ARDUINO
    Serial.begin(115200);
+   while (!Serial)
+   {
+    delay(1);
+   }
+
+   loraSetup();
+  
    GPSSerial.begin(9600);
 
-
-   while (!Serial);
-   Serial.println("LoRa Sender");
-   LoRa.setPins(SS,RST,DI0);
-   if (!LoRa.begin(BAND,PABOOST))
-   {
-      Serial.println("Starting LoRa failed!");
-      while (1);
-   }
 #endif
 
    for(uint8_t i = 0; i < GPS_BUF_MAX_SIZE + 1; i++)
@@ -139,6 +160,18 @@ void sendNmeaCmd(char* cmd)
   GPSSerial.print('\r');
   GPSSerial.print('\n');
   
+}
+
+void checkBatteryLevel()
+{
+  #define VBATPIN A7
+   
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat *= 2;    // we divided by 2, so multiply back
+  measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+  measuredvbat /= 1024; // convert to voltage
+  Serial.print("VBat: " ); 
+  Serial.println(measuredvbat);
 }
 
 void handleDebugCommand(char* cmd)
@@ -201,6 +234,12 @@ void handleDebugCommand(char* cmd)
     return;
   }
 
+  if (strcmp(cmd,"batt") == 0)
+  {
+    checkBatteryLevel();
+    return;
+  }
+
   // Show help
   Serial.println("**** HELP MENU ****");
   Serial.println("gpmtk - getVer");
@@ -211,7 +250,8 @@ void handleDebugCommand(char* cmd)
   Serial.println("10hz - fastest gps updates");
   Serial.println("3hz - faster gps updates");
   Serial.println("1hz - default gps updates");
-  Serial.println("5s - slow gps updates");  
+  Serial.println("5s - slow gps updates");
+  Serial.println("batt - battery level");
 }
 
 void readDebugCommands()
