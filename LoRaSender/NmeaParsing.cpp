@@ -1,7 +1,17 @@
 #include "NmeaParsing.h"
+#include "MissionData.h"
 
 #include "Arduino.h"
 #include <string.h>
+
+#define NMEA_PARSING_DEBUG
+#ifdef NMEA_PARSING_DEBUG
+  #define nmeaDebug Serial.print
+  #define nmeaDebugln  Serial.println
+#else
+  #define nmeaDebug if(0) Serial.print
+  #define nmeaDebugln if(0) Serial.println
+#endif
 
 #define GPSMODE_NEW_LINE 0
 #define GPSMODE_CHECKSUM_1       1       // We received the *, waiting for checksum bytes
@@ -53,6 +63,7 @@ void decodeNmeaGpggaFixDataMsg()
    nullTerminateGpsBuf();
 
    char* altitude = getGpsBufArg(9);
+   char* timestamp = getGpsBufArg(1);
    char* lat1 = getGpsBufArg(2);
    char* lat2 = getGpsBufArg(3);
    char* lng1 = getGpsBufArg(4);
@@ -67,28 +78,32 @@ void decodeNmeaGpggaFixDataMsg()
 
    if (fixArg[0] == '0')
    {
-      Serial.print("  No fix: ");
+      nmeaDebug("  No fix: ");
       return;
    }
    if (fixArg[0] == '1')
    {
-      Serial.println("  GPS fix");
+      nmeaDebugln("  GPS fix");
    }
    if (fixArg[0] == '2')
    {
-      Serial.println("  DGPS fix");
+      nmeaDebugln("  DGPS fix");
    }
 
-   Serial.print("  LAT: ");
-   Serial.print(lat1);
-   Serial.println(lat2);
+   nmeaDebug("  LAT: ");
+   nmeaDebug(lat1);
+   nmeaDebugln(lat2);   
 
-   Serial.print("  LNG: ");
-   Serial.print(lng1);
-   Serial.println(lng2);
+   nmeaDebug("  LNG: ");
+   nmeaDebug(lng1);
+   nmeaDebugln(lng2);    
 
-   Serial.print("  ALT: ");
-   Serial.println(altitude);
+   nmeaDebug("  ALT: ");
+   nmeaDebugln(altitude);
+
+   mdUpdatePosition(lat1, lat2, lng1, lng2);
+   mdUpdateAltitude(altitude);
+   mdUpdateTimestamp(timestamp);
 }
 
 void nullTerminateGpsBuf()
@@ -141,9 +156,11 @@ void decodeNmeaGpvtgMadeGoodGroundSpeedMsg()
       return;
    }
 
-   Serial.print("  SPD: ");
-   Serial.print(speedKmh);
-   Serial.println(" kmh");
+   nmeaDebug("  SPD: ");
+   nmeaDebug(speedKmh);
+   nmeaDebugln(" kmh");
+
+   mdUpdateSpeed(speedKmh);
 }
 
 void decodeNmeaGprmcGpsTransitDataMsg()
@@ -162,24 +179,15 @@ void decodeNmeaGprmcGpsTransitDataMsg()
       return;
    }
 
-   Serial.print("  LAT: ");
-   Serial.print(lat1);
-   Serial.println(lat2);
+   nmeaDebug("  LAT: ");
+   nmeaDebug(lat1);
+   nmeaDebugln(lat2);
 
-   Serial.print("  LNG: ");
-   Serial.print(lng1);
-   Serial.println(lng2);
+   nmeaDebug("  LNG: ");
+   nmeaDebug(lng1);
+   nmeaDebugln(lng2);
 
-   Serial.print("  SPD: ");
-   Serial.print(groundSpeedKnots);
-   Serial.println(" knots");
-
-   //printf("geo:");
-   //convertGpsDegressMinutesToDecimal(lat1,lat2);
-   //printf(",");
-   //convertGpsDegressMinutesToDecimal(lng1,lng2);
-   //printf("\n");
-
+   mdUpdatePosition(lat1, lat2, lng1, lng2);
 }
 
 void decodeNmeaGpgllLatLongMsg()
@@ -197,19 +205,15 @@ void decodeNmeaGpgllLatLongMsg()
       return;
    }
 
-   Serial.print("  LAT: ");
-   Serial.print(lat1);
-   Serial.println(lat2);
+   nmeaDebug("  LAT: ");
+   nmeaDebug(lat1);
+   nmeaDebugln(lat2);
 
-   Serial.print("  LNG: ");
-   Serial.print(lng1);
-   Serial.println(lng2);
+   nmeaDebug("  LNG: ");
+   nmeaDebug(lng1);
+   nmeaDebugln(lng2);
 
-   //printf("geo:");
-   //convertGpsDegressMinutesToDecimal(lat1,lat2);
-   //printf(",");
-   //convertGpsDegressMinutesToDecimal(lng1,lng2);
-   //printf("\n");
+   mdUpdatePosition(lat1, lat2, lng1, lng2);
 }
 
 void decodeNmeaGpgsaDopAndFixMsg()
@@ -229,26 +233,28 @@ void decodeNmeaGpgsaDopAndFixMsg()
 
    if (fixArg[0] == '0')
    {
-      Serial.print("  No fix: ");
+      nmeaDebug("  No fix: ");
       return;
    }
    if (fixArg[0] == '1')
    {
-      Serial.println("  GPS fix");
+      nmeaDebugln("  GPS fix");
    }
    if (fixArg[0] == '2')
    {
-      Serial.println("  DGPS fix");
+      nmeaDebugln("  DGPS fix");
    }
 
-   Serial.print("  PDOP: ");
-   Serial.println(pdop);
+   nmeaDebug("  PDOP: ");
+   nmeaDebugln(pdop);
 
-   Serial.print("  HDOP: ");
-   Serial.println(hdop);
+   nmeaDebug("  HDOP: ");
+   nmeaDebugln(hdop);
 
-   Serial.print("  VDOP: ");
-   Serial.println(vdop);
+   nmeaDebug("  VDOP: ");
+   nmeaDebugln(vdop);
+
+   mdUpdateFix(fixArg, pdop, hdop, vdop);
 }
 
 void decodeNmeaGpgsvSatInViewMsg()
@@ -263,14 +269,17 @@ void decodeNmeaGpgsvSatInViewMsg()
       return;
    }
 
-   Serial.print("  #SAT: ");
-   Serial.println(satsInView);
+   nmeaDebug("  #SAT: ");
+   nmeaDebugln(satsInView);
+
+   mdUpdateNumSats(satsInView);
 }
 
 void decodeNmeaMessage()
 {
-
-   Serial.print("\nValid: ");
+  Serial.println("decodeNmeaMessage - enter");
+  
+   nmeaDebug("\nValid: ");
 
    if (gpsBufPos < 5)
    {
@@ -340,7 +349,7 @@ void decodeNmeaMessage()
 
    if (strncmp("GPBOD",gpsBuf, 5) == 0)
    {
-      Serial.println("Bearing origin to dest msg - WTF");
+      nmeaDebugln("Bearing origin to dest msg - WTF");
       return;
    }
 
@@ -456,6 +465,3 @@ void processGpsData(char data)
 
    }
 }
-
-
-
