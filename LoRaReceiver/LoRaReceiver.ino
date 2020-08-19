@@ -52,7 +52,7 @@ void obfuscateData(uint8_t* dest, uint8_t* src, uint8_t msgIndex, uint8_t msgLen
    }
 }
 
-uint8_t computeChecksum(char* buf, uint8_t bufLen)
+uint8_t computeChecksum(uint8_t* buf, uint8_t bufLen)
 {
    uint8_t cs = 0;
    for(int i = 0; i < bufLen; i++)
@@ -133,10 +133,100 @@ char* messageTypeToString(uint8_t msgType)
       return "Num Sats";
     case 6:
       return "Speed";
+    case 0x10:
+      return "Event GPS 2D Fix Acquired";
+    case 0x11:
+      return "Event GPS 3d Fix Acquired";
+    case 0x12:
+      return "Event GPS Lost";
+    case 0x14:
+      return "Launch Detected";
+    case 0x15:
+      return "Apogee Detected";
+    case 0x16:
+      return "Landing Detected";
+    case 0x17:
+      return "ASCII Msg";
+    case 0x20:
+      return "CMD Enter Launch Detect Mode";
+    case 0x21:
+      return "CMD Get Position";
     default:
       return "Unknown";  
     
   }
+}
+
+void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
+{
+  Serial.println("\n\n");
+  Serial.print("** New Packet **  RSSI=");
+  Serial.println(rssi);
+  
+  digitalWrite(LED, HIGH);
+  RH_RF95::printBuffer("CT Received: ", ctBuf, len);    
+  
+  
+  // Serial.print("Got: ");
+  // Serial.println((char*)buf);
+  
+  if (len < 5)
+  {
+    Serial.println("Message missing header!");
+    return;
+  }
+  
+  if (len > 25)
+  {
+    Serial.println("Message too large for mission control");
+    return;
+  }
+
+  uint8_t decMsg[25];
+  obfuscateData(decMsg, (uint8_t*) &ctBuf[5], ctBuf[2], len - 5);
+  uint8_t csCalc = computeChecksum( decMsg, len-5);
+  
+  Serial.print("Checksum Provided=");
+  Serial.print(ctBuf[4]);
+  Serial.print("   Calculated=");
+  Serial.print( (int) csCalc);
+
+  if (csCalc != ctBuf[4])
+  {
+    Serial.println("  INVALID!");
+    return;
+  }
+  
+  Serial.println("  OK");
+
+  // Print decrypted message
+  Serial.print("DestID=");
+  Serial.println((char) ctBuf[0]);
+  
+  Serial.print("SrcID=");
+  Serial.println((char) ctBuf[1]);
+
+  Serial.print("MsgIndex=");
+  Serial.println(ctBuf[2]);
+
+  Serial.print("MsgType=");
+  Serial.print(ctBuf[3]);
+  Serial.print("=");
+  Serial.println(messageTypeToString(ctBuf[3]));  
+  
+  decMsg[len - 5] = 0;  // null terminate
+
+  Serial.print("DecMsg=");
+  Serial.println((char*)decMsg);  
+
+  RH_RF95::printBuffer("PT: ", decMsg, len-5);
+ 
+  // Send a reply
+  uint8_t data[] = "And hello back to you";
+  rf95.send(data, sizeof(data));
+  rf95.waitPacketSent();
+  Serial.println("Sent a reply");
+  digitalWrite(LED, LOW);
 }
  
 void loop()
@@ -150,71 +240,8 @@ void loop()
  
     if (rf95.recv(buf, &len))
     {
-      Serial.println("\n\n");
-      Serial.println("** New Packet **");
-      digitalWrite(LED, HIGH);
-      RH_RF95::printBuffer("Received: ", buf, len);    
-
-      
-      Serial.print("Got: ");
-      Serial.println((char*)buf);
-
-      if (len < 5)
-      {
-        Serial.println("Message missing header!");
-      }
-      else if (len > 25)
-      {
-        Serial.println("Message too large for mission control");
-      }
-      else
-      {
-        // Print decrypted message
-        Serial.print("DestID=");
-        Serial.println((char) buf[0]);
-        
-        Serial.print("SrcID=");
-        Serial.println((char) buf[1]);
-
-        Serial.print("MsgIndex=");
-        Serial.println(buf[2]);
-
-        Serial.print("MsgType=");
-        Serial.print(buf[3]);
-        Serial.print("=");
-        Serial.println(messageTypeToString(buf[3]));
-
-        Serial.print("Checksum Provided=");
-        Serial.print(buf[4]);
-
-        
-
-        uint8_t decMsg[25];
-        obfuscateData(decMsg, (uint8_t*) &buf[5], buf[2], len - 5);
-
-        Serial.print("   Calculated=");
-        Serial.println( (int) computeChecksum( decMsg, len-5));
-        
-        decMsg[len - 5] = 0;  // null terminate
-
-        Serial.print("DecMsg=");
-        Serial.println((char*)decMsg);
-
-        
-
-        RH_RF95::printBuffer("DecMsg: ", decMsg, len-5);
-      }
-
-      
-       Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
- 
-      // Send a reply
-      uint8_t data[] = "And hello back to you";
-      rf95.send(data, sizeof(data));
-      rf95.waitPacketSent();
-      Serial.println("Sent a reply");
-      digitalWrite(LED, LOW);
+      uint8_t rssi = rf95.lastRssi();
+      processMsg(buf, len, rssi);
     }
     else
     {
