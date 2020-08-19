@@ -4,7 +4,7 @@
 #include "Arduino.h"
 #include <string.h>
 
-#define NMEA_PARSING_DEBUG
+// #define NMEA_PARSING_DEBUG
 #ifdef NMEA_PARSING_DEBUG
   #define nmeaDebug Serial.print
   #define nmeaDebugln  Serial.println
@@ -277,7 +277,7 @@ void decodeNmeaGpgsvSatInViewMsg()
 
 void decodeNmeaMessage()
 {
-  Serial.println("decodeNmeaMessage - enter");
+  nmeaDebugln("decodeNmeaMessage - enter");
   
    nmeaDebug("\nValid: ");
 
