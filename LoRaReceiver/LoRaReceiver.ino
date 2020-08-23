@@ -157,6 +157,26 @@ char* messageTypeToString(uint8_t msgType)
   }
 }
 
+void printHexDigit(uint8_t data)
+{
+  if (data < 16)
+  {
+    Serial.print("0");
+  }
+  Serial.print((int) data, HEX);
+}
+
+void sendMsgToPc(uint8_t msgType, uint8_t len, uint8_t* payload)
+{
+  Serial.print(">");
+  printHexDigit(msgType);
+  for(uint8_t i = 0; i < len; i++)
+  {
+    printHexDigit(payload[i]);
+  }
+  Serial.println("!");
+}
+
 void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
 {
   Serial.println("\n\n");
@@ -227,6 +247,8 @@ void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
   rf95.waitPacketSent();
   Serial.println("Sent a reply");
   digitalWrite(LED, LOW);
+
+  sendMsgToPc(ctBuf[3], len-5, decMsg);
 }
  
 void loop()
@@ -248,4 +270,7 @@ void loop()
       Serial.println("Receive failed");
     }
   }
+
+  delay(100);
+  Serial.print(".");
 }

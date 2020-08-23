@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QtSerialPort>
+#include <QList>
+#include <QByteArray>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,7 +22,36 @@ protected slots:
 
    void generateQrCode();
 
+   void openRadio();
+
+   void serialDataAvailable();
+
+protected:
+
+   void logRawSerialData(QByteArray data);
+
+   void processSerialData(QByteArray data);
+
+   void processTimestampReport(QByteArray decodedData);
+   void processPositionReport(QByteArray decodedData);
+   void processAltitudeReport(QByteArray decodedData);
+   void processBatteryLevelReport(QByteArray decodedData);
+   void processGpsFixReport(QByteArray decodedData);
+   void processNumSatsReport(QByteArray decodedData);
+   void processSpeedReport(QByteArray decodedData);
+   void process2dFixAcquiredEvent(QByteArray decodedData);
+   void process3dFixAcquiredEvent(QByteArray decodedData);
+   void processGpsLostEvent(QByteArray decodedData);
+   void processLaunchEvent(QByteArray decodedData);
+   void processApogeeEvent(QByteArray decodedData);
+   void processLandingEvent(QByteArray decodedData);
+   void processAsciiEvent(QByteArray decodedData);
+
 private:
    Ui::MainWindow *ui;
+
+   QList<QSerialPortInfo> theAvailPorts;
+
+   QSerialPort* theOpenPort;
 };
 #endif // MAINWINDOW_H
