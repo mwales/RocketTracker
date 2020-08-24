@@ -54,6 +54,8 @@ protected:
 
    double convertGpsDegressMinutesToDecimal(char* number, char* direction);
 
+   void printQr(const uint8_t qrcode[]);
+
 private:
    Ui::MainWindow *ui;
 
@@ -63,5 +65,7 @@ private:
 
    QTimer theHeartbeatTimer;
    QTime theTimeSinceLastMsg;
+
+   QString theQrLabel;
 };
 #endif // MAINWINDOW_H

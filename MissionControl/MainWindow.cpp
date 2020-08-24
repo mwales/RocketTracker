@@ -35,16 +35,21 @@ MainWindow::MainWindow(QWidget *parent)
            this, &MainWindow::heartbeat);
 }
 
-static void printQr(const uint8_t qrcode[]) {
+void MainWindow::printQr(const uint8_t qrcode[]) {
+        theQrLabel = "";
         int size = qrcodegen_getSize(qrcode);
         int border = 4;
         for (int y = -border; y < size + border; y++) {
                 for (int x = -border; x < size + border; x++) {
                         fputs((qrcodegen_getModule(qrcode, x, y) ? "##" : "  "), stdout);
+                        theQrLabel += (qrcodegen_getModule(qrcode, x, y) ? "##" : "  ");
+
                 }
                 fputs("\n", stdout);
+                theQrLabel += "\n";
         }
         fputs("\n", stdout);
+
 }
 
 
@@ -378,6 +383,8 @@ void MainWindow::processPositionReport(QByteArray decodedData)
    ui->theLatitude1Value->setText(QString("%1").arg(latInHhmmss));
    ui->theLongitude1Value->setText(QString("%1").arg(longInHhmmss));
 
+   ui->theQrText->setText(QString("geo:%1,%2").arg(latDegrees).arg(longDegrees));
+
 }
 
 void MainWindow::processAltitudeReport(QByteArray decodedData)
@@ -548,7 +555,11 @@ void MainWindow::generateQrCode()
    bool ok = qrcodegen_encodeText(ui->theQrText->text().toLatin1(), tempBuffer, qrcode, errCorLvl,
                                  qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
    if (ok)
+   {
+
      printQr(qrcode);
+     ui->theQrLabel->setText(theQrLabel);
+   }
 }
 
 double MainWindow::convertGpsDegressMinutesToDecimal(char* number, char* direction)
