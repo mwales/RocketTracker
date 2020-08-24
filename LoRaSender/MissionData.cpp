@@ -38,7 +38,8 @@ char mdLastAltitude[ALTITUDE_REPORT_LEN];
 void mdUpdateAltitude(char* alt)
 {
   float altFloat = atof(alt);
-  snprintf(mdLastAltitude, ALTITUDE_REPORT_LEN, "%04.1f", altFloat);
+  uint16_t metersTimes10 = altFloat * 10.0;
+  snprintf(mdLastAltitude, ALTITUDE_REPORT_LEN, "%05d", metersTimes10);
 }
 
 char* mdGetAltitude()
@@ -200,7 +201,8 @@ char mdLastSpeed[SPEED_REPORT_LEN];
 void mdUpdateSpeed(char* speed)
 {
   float speedFloat = atof(speed);
-  snprintf(mdLastSpeed, SPEED_REPORT_LEN, "%04.1f", speedFloat);
+  uint16_t speedKmhTimes10 = speedFloat * 10.0;
+  snprintf(mdLastSpeed, SPEED_REPORT_LEN, "%04d", speedKmhTimes10);
 }
 
 char* mdGetSpeed()

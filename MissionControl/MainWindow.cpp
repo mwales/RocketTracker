@@ -10,7 +10,10 @@
 
 MainWindow::MainWindow(QWidget *parent)
    : QMainWindow(parent)
-   , ui(new Ui::MainWindow)
+   , ui(new Ui::MainWindow),
+     theOpenPort(nullptr),
+     theHeartbeatTimer(this),
+     theTimeSinceLastMsg(0,0,0)
 {
    ui->setupUi(this);
 
@@ -20,10 +23,16 @@ MainWindow::MainWindow(QWidget *parent)
       ui->theRadioPortList->addItem(pi.systemLocation());
    }
 
+   theHeartbeatTimer.setInterval(200);
+   theHeartbeatTimer.start();
+   theTimeSinceLastMsg.start();
+
    connect(ui->theGenerateButton, &QPushButton::clicked,
            this, &MainWindow::generateQrCode);
    connect(ui->theOpenRadioButton, &QPushButton::clicked,
            this, &MainWindow::openRadio);
+   connect(&theHeartbeatTimer, &QTimer::timeout,
+           this, &MainWindow::heartbeat);
 }
 
 static void printQr(const uint8_t qrcode[]) {
@@ -37,6 +46,7 @@ static void printQr(const uint8_t qrcode[]) {
         }
         fputs("\n", stdout);
 }
+
 
 void MainWindow::openRadio()
 {
@@ -82,6 +92,8 @@ void MainWindow::openRadio()
 
    connect(theOpenPort, &QSerialPort::readyRead,
            this, &MainWindow::serialDataAvailable);
+
+   theTimeSinceLastMsg.restart();
 }
 
 void MainWindow::serialDataAvailable()
@@ -100,6 +112,34 @@ void MainWindow::serialDataAvailable()
    }
 }
 
+void MainWindow::heartbeat()
+{
+   qDebug() << "hearbeat!";
+
+   if (theOpenPort == nullptr)
+   {
+      ui->theLastRxValue->setText("NO COMMS");
+      return;
+   }
+
+   int et = theTimeSinceLastMsg.elapsed();
+   int ms = et % 1000;
+   int numSecs = (et / 1000);
+   QString msString = QString("%1").arg(ms);
+   while(msString.length() < 3)
+   {
+      msString = "0" + msString;
+   }
+
+   QString sString = QString("%1").arg(numSecs);
+
+   qDebug() << sString << " . " << msString;
+
+   QString timeString = sString + "." + msString;
+   ui->theLastRxValue->setText(timeString);
+
+}
+
 void MainWindow::logRawSerialData(QByteArray data)
 {
    QString strData(data.size());
@@ -116,10 +156,11 @@ void MainWindow::logRawSerialData(QByteArray data)
    ui->theSerialRaw->addItem(strData);
 
    // Do we have too many items?
-   if (ui->theSerialRaw->count() > 300)
+   if (ui->theSerialRaw->count() > 10)
    {
-      QListWidgetItem* removeMe = ui->theSerialRaw->item(0);
-      ui->theSerialRaw->removeItemWidget(removeMe);
+      qDebug() << "Removing a line from raw log";
+      QListWidgetItem* removeMe = ui->theSerialRaw->takeItem(0);
+      delete removeMe;
    }
 
    ui->theSerialRaw->setCurrentRow(ui->theSerialRaw->count() - 1);
@@ -184,6 +225,8 @@ void MainWindow::processSerialData(QByteArray data)
    char msgType = decodedData.front();
    decodedData.remove(0,1);
 
+   theTimeSinceLastMsg.restart();
+
    switch(msgType)
    {
    case 0x00:
@@ -219,6 +262,11 @@ void MainWindow::processSerialData(QByteArray data)
    case 0x06:
       // Speed
       processSpeedReport(decodedData);
+      return;
+
+   case 0x0f:
+      // RSSI
+      processRssiReport(decodedData);
       return;
 
    case 0x10:
@@ -265,17 +313,88 @@ void MainWindow::processSerialData(QByteArray data)
 
 void MainWindow::processTimestampReport(QByteArray decodedData)
 {
+   if (decodedData.size() < 6)
+   {
+      qDebug() << "Timestamp too short";
+      return;
+   }
 
+   QString timeDisplay = QString("%1:%2:%3")
+                         .arg(QString(decodedData.mid(0,2)))
+                         .arg(QString(decodedData.mid(2,2)))
+                         .arg(QString(decodedData.mid(4,2)));
+   ui->theTimestampValue->setText(timeDisplay);
 }
 
 void MainWindow::processPositionReport(QByteArray decodedData)
 {
    qDebug() << "Lat / Long data: " << decodedData;
+
+   // Lat ends with either N/S
+   int indexOfN = decodedData.indexOf('N');
+   int indexOfS = decodedData.indexOf('S');
+
+   int indexOfLatDir = indexOfN;
+   if (indexOfLatDir == -1)
+   {
+      indexOfLatDir = indexOfS;
+   }
+
+   if ( (indexOfN == -1) && (indexOfS == -1))
+   {
+      qWarning() << "Can't process position report.  No N or S found: " << decodedData;
+      return;
+   }
+
+   // Last thing in the report should be E/W
+   int indexOfE = decodedData.indexOf('E');
+   int indexOfW = decodedData.indexOf('W');
+
+   if ( (indexOfE == -1) && (indexOfW == -1))
+   {
+      qWarning() << "Can't process position report.  No E or W found: " << decodedData;
+      return;
+   }
+
+   int indexOfLongDir = indexOfE;
+   if (indexOfLongDir == -1)
+   {
+      indexOfLongDir = indexOfW;
+   }
+
+   // Lat in hhmmss
+   QString latInHhmmss = QString(decodedData.mid(0, indexOfLatDir));
+   QString longInHhmmss = QString(decodedData.mid(indexOfLatDir + 1, indexOfLongDir - indexOfLatDir - 1));
+
+   char latDir = decodedData.at(indexOfLatDir);
+   char longDir = decodedData.at(indexOfLongDir);
+
+   double latDegrees = convertGpsDegressMinutesToDecimal(latInHhmmss.toLatin1().data(), &latDir);
+   double longDegrees = convertGpsDegressMinutesToDecimal(longInHhmmss.toLatin1().data(), &longDir);
+
+   ui->theLatitude2Value->setText(QString("%1").arg(latDegrees));
+   ui->theLongitude2Value->setText(QString("%1").arg(longDegrees));
+
+   ui->theLatitude1Value->setText(QString("%1").arg(latInHhmmss));
+   ui->theLongitude1Value->setText(QString("%1").arg(longInHhmmss));
+
 }
 
 void MainWindow::processAltitudeReport(QByteArray decodedData)
 {
+   QString data = QString(decodedData);
+   bool success;
+   double altMetersTimes10 = data.toDouble(&success);
+   if (!success)
+   {
+      qWarning() << "Error processing alititude data, cant convert to double" << decodedData;
+      return;
+   }
 
+   double altMeters = altMetersTimes10 / 10.0;
+   double altFeet = altMeters * 3.28084;
+   ui->theAltitude1Value->setText(QString("%1").arg(altMeters));
+   ui->theAltitude2Value->setText(QString("%1").arg(altFeet));
 }
 
 void MainWindow::processBatteryLevelReport(QByteArray decodedData)
@@ -320,13 +439,13 @@ void MainWindow::processGpsFixReport(QByteArray decodedData)
    QString fix = "Invalid";
    switch(decodedData[0])
    {
-   case 0:
+   case '1':
       fix = "None";
       break;
-   case 1:
+   case '2':
       fix = "2D";
       break;
-   case 2:
+   case '3':
       fix = "3D";
       break;
    }
@@ -362,7 +481,25 @@ void MainWindow::processNumSatsReport(QByteArray decodedData)
 
 void MainWindow::processSpeedReport(QByteArray decodedData)
 {
+   QString data = QString(decodedData);
+   bool success;
+   double speedKmhTime10 = data.toDouble(&success);
+   if(!success)
+   {
+      qWarning() << "Error processing speed report, cant convert to double" << decodedData;
+      return;
+   }
 
+   double speedKmh = speedKmhTime10 / 10.0;
+   double speedMph = speedKmh * 0.621371;
+   ui->theSpeed1Value->setText(QString("%1").arg(speedKmh));
+   ui->theSpeed2Value->setText(QString("%1").arg(speedMph));
+}
+
+void MainWindow::processRssiReport(QByteArray decodedData)
+{
+   QString rssiStr = decodedData;
+   ui->theRssiValue->setText(rssiStr);
 }
 
 void MainWindow::process2dFixAcquiredEvent(QByteArray decodedData)
@@ -412,6 +549,54 @@ void MainWindow::generateQrCode()
                                  qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
    if (ok)
      printQr(qrcode);
+}
+
+double MainWindow::convertGpsDegressMinutesToDecimal(char* number, char* direction)
+{
+   uint8_t indexOfDecimal = 0xff;
+   for(int i = 0; i < strlen(number); i++)
+   {
+      if (number[i] == '.')
+      {
+         indexOfDecimal = i;
+         break;
+      }
+   }
+
+   if (indexOfDecimal == 0xff)
+   {
+      // No decimal found
+      printf("Error");
+      return 0.0;
+   }
+
+   char wholeBuf[8];
+   strncpy(wholeBuf, number, 8);
+   if (indexOfDecimal < 2)
+   {
+      printf("Error");
+      return 0.0;
+   }
+
+   wholeBuf[indexOfDecimal - 2] = 0;
+
+   //char* retVal = (char*) malloc(100);
+   double minutes = strtod(number + indexOfDecimal - 2, NULL);
+
+   double degrees = strtod(wholeBuf, NULL);
+
+   double decimalVal = degrees + minutes / 60.0;
+
+   if ( (direction[0] == 'S') ||
+        (direction[0] == 's') ||
+        (direction[0] == 'W') ||
+        (direction[0] == 'w') )
+   {
+      decimalVal *= -1.0;
+   }
+
+   // printf("%g", decimalVal);
+   return decimalVal;
 }
 
 

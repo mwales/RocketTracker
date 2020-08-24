@@ -4,7 +4,7 @@
 #include "Arduino.h"
 #include <string.h>
 
-// #define NMEA_PARSING_DEBUG
+#define NMEA_PARSING_DEBUG
 #ifdef NMEA_PARSING_DEBUG
   #define nmeaDebug Serial.print
   #define nmeaDebugln  Serial.println
@@ -231,18 +231,18 @@ void decodeNmeaGpgsaDopAndFixMsg()
       return;
    }
 
-   if (fixArg[0] == '0')
+   if (fixArg[0] == '1')
    {
       nmeaDebug("  No fix: ");
       return;
    }
-   if (fixArg[0] == '1')
-   {
-      nmeaDebugln("  GPS fix");
-   }
    if (fixArg[0] == '2')
    {
-      nmeaDebugln("  DGPS fix");
+      nmeaDebugln("  2D fix");
+   }
+   if (fixArg[0] == '3')
+   {
+      nmeaDebugln("  3D fix");
    }
 
    nmeaDebug("  PDOP: ");

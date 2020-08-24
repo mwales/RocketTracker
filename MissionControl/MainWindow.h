@@ -5,6 +5,8 @@
 #include <QtSerialPort>
 #include <QList>
 #include <QByteArray>
+#include <QTimer>
+#include <QTime>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -26,6 +28,8 @@ protected slots:
 
    void serialDataAvailable();
 
+   void heartbeat();
+
 protected:
 
    void logRawSerialData(QByteArray data);
@@ -39,6 +43,7 @@ protected:
    void processGpsFixReport(QByteArray decodedData);
    void processNumSatsReport(QByteArray decodedData);
    void processSpeedReport(QByteArray decodedData);
+   void processRssiReport(QByteArray decodedData);
    void process2dFixAcquiredEvent(QByteArray decodedData);
    void process3dFixAcquiredEvent(QByteArray decodedData);
    void processGpsLostEvent(QByteArray decodedData);
@@ -47,11 +52,16 @@ protected:
    void processLandingEvent(QByteArray decodedData);
    void processAsciiEvent(QByteArray decodedData);
 
+   double convertGpsDegressMinutesToDecimal(char* number, char* direction);
+
 private:
    Ui::MainWindow *ui;
 
    QList<QSerialPortInfo> theAvailPorts;
 
    QSerialPort* theOpenPort;
+
+   QTimer theHeartbeatTimer;
+   QTime theTimeSinceLastMsg;
 };
 #endif // MAINWINDOW_H

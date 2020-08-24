@@ -177,6 +177,13 @@ void sendMsgToPc(uint8_t msgType, uint8_t len, uint8_t* payload)
   Serial.println("!");
 }
 
+void sendRssiMsgToPc(uint8_t rssi)
+{
+  char rssiMsg[5];
+  snprintf(rssiMsg, 5, "%03d", rssi);
+  sendMsgToPc(0x0f, strlen(rssiMsg), rssiMsg);
+}
+
 void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
 {
   Serial.println("\n\n");
@@ -249,6 +256,7 @@ void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
   digitalWrite(LED, LOW);
 
   sendMsgToPc(ctBuf[3], len-5, decMsg);
+  sendRssiMsgToPc(rssi);
 }
  
 void loop()

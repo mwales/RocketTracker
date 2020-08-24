@@ -35,13 +35,15 @@
  *      llll.llNyyyyy.yyE
  * 0x02 Altitude report
  *      mmmm.m
- * 0x03 Battery level (000-100)
- *      ppp
+ * 0x03 Battery level xxx is voltage x 100 (000-100)
+ *      xxxV,ppp
  * 0x04 GPS Fix / Precision
  *      F_xxx.x (F 0=None, 1=GPS, 2=DGPS)
  * 0x05 Num Satellites
  *      xx
- * 0x06 Speed Update
+ * 0x06 Speed Update kmh x 10
+ *      xxxx
+ * 0x0f RSSI Update (not sent over LoRa)
  *      xxx
  *      
  * 0x10 GPS 2D Fix Aquired
