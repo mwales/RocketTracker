@@ -119,8 +119,6 @@ void MainWindow::serialDataAvailable()
 
 void MainWindow::heartbeat()
 {
-   qDebug() << "hearbeat!";
-
    if (theOpenPort == nullptr)
    {
       ui->theLastRxValue->setText("NO COMMS");
@@ -161,7 +159,7 @@ void MainWindow::logRawSerialData(QByteArray data)
    ui->theSerialRaw->addItem(strData);
 
    // Do we have too many items?
-   if (ui->theSerialRaw->count() > 10)
+   if (ui->theSerialRaw->count() > 150)
    {
       qDebug() << "Removing a line from raw log";
       QListWidgetItem* removeMe = ui->theSerialRaw->takeItem(0);
@@ -384,6 +382,7 @@ void MainWindow::processPositionReport(QByteArray decodedData)
    ui->theLongitude1Value->setText(QString("%1").arg(longInHhmmss));
 
    ui->theQrText->setText(QString("geo:%1,%2").arg(latDegrees).arg(longDegrees));
+   ui->theQrImage->setText(QString("geo:%1,%2").arg(latDegrees).arg(longDegrees));
 
 }
 
@@ -547,19 +546,7 @@ void MainWindow::processAsciiEvent(QByteArray decodedData)
 
 void MainWindow::generateQrCode()
 {
-   enum qrcodegen_Ecc errCorLvl = qrcodegen_Ecc_LOW;  // Error correction level
-
-   // Make and print the QR Code symbol
-   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
-   uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
-   bool ok = qrcodegen_encodeText(ui->theQrText->text().toLatin1(), tempBuffer, qrcode, errCorLvl,
-                                 qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
-   if (ok)
-   {
-
-     printQr(qrcode);
-     ui->theQrLabel->setText(theQrLabel);
-   }
+   ui->theQrImage->setText(ui->theQrText->text());
 }
 
 double MainWindow::convertGpsDegressMinutesToDecimal(char* number, char* direction)
