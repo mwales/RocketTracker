@@ -68,7 +68,7 @@ void checkMissionControlUpdateClock()
       return;
     }
     
-    uint16_t curClock = (millis() >> 10) & 0xffff;
+    uint16_t curClock = (millis() >> 9) & 0xffff;
     if (curClock == loraClock)
     {
       return;

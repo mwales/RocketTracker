@@ -33,8 +33,8 @@
  *      HHMMSS
  * 0x01 Position report
  *      llll.llNyyyyy.yyE
- * 0x02 Altitude report
- *      mmmm.m
+ * 0x02 Altitude report (mmmmm is meters x 10)
+ *      mmmmmm
  * 0x03 Battery level xxx is voltage x 100 (000-100)
  *      xxxV,ppp
  * 0x04 GPS Fix / Precision
