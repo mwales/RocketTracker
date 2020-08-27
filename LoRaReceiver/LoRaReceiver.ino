@@ -191,7 +191,7 @@ void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
   Serial.println(rssi);
   
   digitalWrite(LED, HIGH);
-  RH_RF95::printBuffer("CT Received: ", ctBuf, len);    
+  //RH_RF95::printBuffer("CT Received: ", ctBuf, len);    
   
   
   // Serial.print("Got: ");
@@ -213,31 +213,31 @@ void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
   obfuscateData(decMsg, (uint8_t*) &ctBuf[5], ctBuf[2], len - 5);
   uint8_t csCalc = computeChecksum( decMsg, len-5);
   
-  Serial.print("Checksum Provided=");
-  Serial.print(ctBuf[4]);
-  Serial.print("   Calculated=");
-  Serial.print( (int) csCalc);
+  //Serial.print("Checksum Provided=");
+  //Serial.print(ctBuf[4]);
+  //Serial.print("   Calculated=");
+  //Serial.print( (int) csCalc);
 
   if (csCalc != ctBuf[4])
   {
-    Serial.println("  INVALID!");
+    Serial.println("Checksum INVALID!");
     return;
   }
   
-  Serial.println("  OK");
+  Serial.println("Checksum OK");
 
   // Print decrypted message
-  Serial.print("DestID=");
-  Serial.println((char) ctBuf[0]);
+  // Serial.print("DestID=");
+  // Serial.println((char) ctBuf[0]);
   
-  Serial.print("SrcID=");
-  Serial.println((char) ctBuf[1]);
+  //Serial.print("SrcID=");
+  //Serial.println((char) ctBuf[1]);
 
-  Serial.print("MsgIndex=");
-  Serial.println(ctBuf[2]);
+  //Serial.print("MsgIndex=");
+  //Serial.println(ctBuf[2]);
 
   Serial.print("MsgType=");
-  Serial.print(ctBuf[3]);
+  //Serial.print(ctBuf[3]);
   Serial.print("=");
   Serial.println(messageTypeToString(ctBuf[3]));  
   
@@ -279,6 +279,6 @@ void loop()
     }
   }
 
-  delay(100);
-  Serial.print(".");
+  delay(5);
+  //Serial.print(".");
 }
