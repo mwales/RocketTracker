@@ -5,7 +5,7 @@ QrCode::QrCode(QWidget *parent) :
    QWidget(parent),
    theBorder(4)
 {
-   //setText("http://mwales.net");
+
 }
 
 void QrCode::setText(QString qrText)
@@ -13,7 +13,7 @@ void QrCode::setText(QString qrText)
    theText = qrText;
 
 
-   // I want label to be about 600 x 600
+   // I want label to be about 450 x 450
    enum qrcodegen_Ecc errCorLvl = qrcodegen_Ecc_LOW;  // Error correction level
 
 

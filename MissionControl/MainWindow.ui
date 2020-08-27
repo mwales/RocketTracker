@@ -99,10 +99,10 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="theRssiValue"/>
+           <widget class="QHighlightLineEdit" name="theRssiValue"/>
           </item>
           <item row="1" column="3">
-           <widget class="QLineEdit" name="theBatteryVoltsLabel"/>
+           <widget class="QHighlightLineEdit" name="theBatteryVoltsLabel"/>
           </item>
          </layout>
         </item>
@@ -137,7 +137,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="theGpsFixLabel"/>
+             <widget class="QHighlightLineEdit" name="theGpsFixLabel"/>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_5">
@@ -147,7 +147,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="theDopValue"/>
+             <widget class="QHighlightLineEdit" name="theDopValue"/>
             </item>
            </layout>
           </item>
@@ -174,7 +174,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="theNumSatsValue"/>
+             <widget class="QHighlightLineEdit" name="theNumSatsValue"/>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_9">
@@ -184,7 +184,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="theTimestampValue"/>
+             <widget class="QHighlightLineEdit" name="theTimestampValue"/>
             </item>
            </layout>
           </item>
@@ -231,10 +231,21 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLineEdit" name="theLatitude1Value"/>
+         <widget class="QHighlightLineEdit" name="theLatitude1Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="theLongitude1Value"/>
+         <widget class="QHighlightLineEdit" name="theLongitude1Value">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="1" column="2">
          <widget class="QLabel" name="label_15">
@@ -244,10 +255,18 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QLineEdit" name="theLatitude2Value"/>
+         <widget class="QHighlightLineEdit" name="theLatitude2Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="theLongitude2Value"/>
+         <widget class="QHighlightLineEdit" name="theLongitude2Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
         <item row="2" column="2">
          <widget class="QLabel" name="label_17">
@@ -270,7 +289,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="theSpeed1Value"/>
+           <widget class="QHighlightLineEdit" name="theSpeed1Value">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="label_18">
@@ -287,7 +310,11 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="theSpeed2Value"/>
+           <widget class="QHighlightLineEdit" name="theSpeed2Value">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -307,10 +334,18 @@
         <item>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="1" column="1">
-           <widget class="QLineEdit" name="theAltitude2Value"/>
+           <widget class="QHighlightLineEdit" name="theAltitude2Value">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="theAltitude1Value"/>
+           <widget class="QHighlightLineEdit" name="theAltitude1Value">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="1" column="2">
            <widget class="QLabel" name="label_21">
@@ -396,6 +431,11 @@
    <class>QrCode</class>
    <extends>QLabel</extends>
    <header>QrCode.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QHighlightLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header location="global">QHighlightLineEdit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

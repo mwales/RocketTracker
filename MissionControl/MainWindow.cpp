@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <QtSerialPort>
 #include <QMessageBox>
-#include "qrcodegen.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -33,23 +32,6 @@ MainWindow::MainWindow(QWidget *parent)
            this, &MainWindow::openRadio);
    connect(&theHeartbeatTimer, &QTimer::timeout,
            this, &MainWindow::heartbeat);
-}
-
-void MainWindow::printQr(const uint8_t qrcode[]) {
-        theQrLabel = "";
-        int size = qrcodegen_getSize(qrcode);
-        int border = 4;
-        for (int y = -border; y < size + border; y++) {
-                for (int x = -border; x < size + border; x++) {
-                        fputs((qrcodegen_getModule(qrcode, x, y) ? "##" : "  "), stdout);
-                        theQrLabel += (qrcodegen_getModule(qrcode, x, y) ? "##" : "  ");
-
-                }
-                fputs("\n", stdout);
-                theQrLabel += "\n";
-        }
-        fputs("\n", stdout);
-
 }
 
 
@@ -136,7 +118,6 @@ void MainWindow::heartbeat()
 
    QString sString = QString("%1").arg(numSecs);
 
-   qDebug() << sString << " . " << msString;
 
    QString timeString = sString + "." + msString;
    ui->theLastRxValue->setText(timeString);
@@ -145,12 +126,13 @@ void MainWindow::heartbeat()
 
 void MainWindow::logRawSerialData(QByteArray data)
 {
-   QString strData(data.size());
+   QString strData;
 
    // Trim off line-endings and non-printable
    foreach(char curChar, data)
    {
-      if ( (curChar >= ' ') && (curChar <= '~'))
+      uint8_t tempVal = curChar;
+      if ( (tempVal >= 0x20) && (tempVal <= 0x7e) )
       {
          strData += curChar;
       }
@@ -161,7 +143,6 @@ void MainWindow::logRawSerialData(QByteArray data)
    // Do we have too many items?
    if (ui->theSerialRaw->count() > 150)
    {
-      qDebug() << "Removing a line from raw log";
       QListWidgetItem* removeMe = ui->theSerialRaw->takeItem(0);
       delete removeMe;
    }
@@ -578,7 +559,6 @@ double MainWindow::convertGpsDegressMinutesToDecimal(char* number, char* directi
 
    wholeBuf[indexOfDecimal - 2] = 0;
 
-   //char* retVal = (char*) malloc(100);
    double minutes = strtod(number + indexOfDecimal - 2, NULL);
 
    double degrees = strtod(wholeBuf, NULL);
@@ -593,7 +573,6 @@ double MainWindow::convertGpsDegressMinutesToDecimal(char* number, char* directi
       decimalVal *= -1.0;
    }
 
-   // printf("%g", decimalVal);
    return decimalVal;
 }
 
