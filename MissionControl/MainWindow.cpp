@@ -36,6 +36,50 @@ MainWindow::MainWindow(QWidget *parent)
            this, &MainWindow::sendCmd);
 }
 
+void MainWindow::openSerial(QString port)
+{
+   if (theOpenPort)
+   {
+      qDebug() << "Closing serial port";
+      theOpenPort->close();
+      theOpenPort->deleteLater();
+      theOpenPort = nullptr;
+   }
+
+   theOpenPort = new QSerialPort(port, this);
+
+   if(!theOpenPort->setDataBits(QSerialPort::Data8) ||
+      !theOpenPort->setBaudRate(115200) ||
+      !theOpenPort->setParity(QSerialPort::NoParity) ||
+      !theOpenPort->setStopBits(QSerialPort::OneStop) )
+   {
+      qWarning() << "Error configuring the serial port";
+      QMessageBox::critical(this, "Error opening serial port", "Failed to configure the serial port for 115200 8N1: " + theOpenPort->errorString());
+
+      theOpenPort->deleteLater();
+      theOpenPort = nullptr;
+      return;
+   }
+
+   qDebug() << "Serial port configured for 115200 8N1";
+
+   if(!theOpenPort->open(QIODevice::ReadWrite))
+   {
+      qWarning() << "Failed to open the serial port";
+      QMessageBox::critical(this, "Error opening serial port", "Error opening serial port: " + theOpenPort->errorString());
+
+      theOpenPort->deleteLater();
+      theOpenPort = nullptr;
+   }
+
+   qDebug() << "Serial port opened successfully!";
+
+   connect(theOpenPort, &QSerialPort::readyRead,
+           this, &MainWindow::serialDataAvailable);
+
+   theTimeSinceLastMsg.restart();
+}
+
 
 void MainWindow::openRadio()
 {
@@ -330,7 +374,7 @@ void MainWindow::processTimestampReport(QByteArray decodedData)
       qDebug() << "Timestamp too short";
       return;
    }
-
+void openSerial(QString port);
    QString timeDisplay = QString("%1:%2:%3")
                          .arg(QString(decodedData.mid(0,2)))
                          .arg(QString(decodedData.mid(2,2)))

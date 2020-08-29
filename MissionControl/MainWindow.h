@@ -20,6 +20,8 @@ public:
    MainWindow(QWidget *parent = nullptr);
    ~MainWindow();
 
+   void openSerial(QString port);
+
 protected slots:
 
    void generateQrCode();
