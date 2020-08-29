@@ -32,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
            this, &MainWindow::openRadio);
    connect(&theHeartbeatTimer, &QTimer::timeout,
            this, &MainWindow::heartbeat);
+   connect(ui->theSendCmdButton, &QPushButton::pressed,
+           this, &MainWindow::sendCmd);
 }
 
 
@@ -122,6 +124,27 @@ void MainWindow::heartbeat()
    QString timeString = sString + "." + msString;
    ui->theLastRxValue->setText(timeString);
 
+}
+
+void MainWindow::sendCmd()
+{
+   if (theOpenPort == nullptr)
+   {
+      QMessageBox::critical(this, "Failed to send message",
+                            "Serial port not open");
+      return;
+   }
+
+   if (theOpenPort != nullptr)
+   {
+      QString msg = ui->theCmdEdit->text() + "\n";
+
+      if (-1 == theOpenPort->write(msg.toLatin1()))
+      {
+         QMessageBox::critical(this, "Failed to send message",
+                               QString("Error %1").arg(theOpenPort->errorString()));
+      }
+   }
 }
 
 void MainWindow::logRawSerialData(QByteArray data)
@@ -246,6 +269,11 @@ void MainWindow::processSerialData(QByteArray data)
    case 0x06:
       // Speed
       processSpeedReport(decodedData);
+      return;
+
+   case 0x07:
+      // Peak altitude
+      processPeakAltitudeReport(decodedData);
       return;
 
    case 0x0f:
@@ -382,6 +410,23 @@ void MainWindow::processAltitudeReport(QByteArray decodedData)
    double altFeet = altMeters * 3.28084;
    ui->theAltitude1Value->setText(QString("%1").arg(altMeters));
    ui->theAltitude2Value->setText(QString("%1").arg(altFeet));
+}
+
+void MainWindow::processPeakAltitudeReport(QByteArray decodedData)
+{
+   QString data = QString(decodedData);
+   bool success;
+   double altMetersTimes10 = data.toDouble(&success);
+   if (!success)
+   {
+      qWarning() << "Error processing alititude data, cant convert to double" << decodedData;
+      return;
+   }
+
+   double altMeters = altMetersTimes10 / 10.0;
+   double altFeet = altMeters * 3.28084;
+   ui->theApogee1Value->setText(QString("%1").arg(altMeters));
+   ui->theApogee2Value->setText(QString("%1").arg(altFeet));
 }
 
 void MainWindow::processBatteryLevelReport(QByteArray decodedData)

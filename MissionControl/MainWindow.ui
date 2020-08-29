@@ -109,6 +109,23 @@
        </layout>
       </item>
       <item>
+       <widget class="QListWidget" name="theSerialRaw"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLineEdit" name="theCmdEdit"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="theSendCmdButton">
+          <property name="text">
+           <string>Send Cmd</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QLabel" name="label_24">
@@ -192,9 +209,6 @@
         </item>
        </layout>
       </item>
-      <item>
-       <widget class="QListWidget" name="theSerialRaw"/>
-      </item>
      </layout>
     </item>
     <item>
@@ -216,27 +230,6 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>Latitude:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_12">
-          <property name="text">
-           <string>Longitude:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QHighlightLineEdit" name="theLatitude1Value">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QHighlightLineEdit" name="theLongitude1Value">
           <property name="enabled">
@@ -247,10 +240,24 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>degrees</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="2">
          <widget class="QLabel" name="label_15">
           <property name="text">
            <string>HHMM.SS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>Longitude:</string>
           </property>
          </widget>
         </item>
@@ -268,107 +275,127 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="label_17">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_11">
           <property name="text">
-           <string>degrees</string>
+           <string>Latitude:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QHighlightLineEdit" name="theLatitude1Value">
+          <property name="readOnly">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Speed:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QHighlightLineEdit" name="theSpeed1Value">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_18">
-            <property name="text">
-             <string>kmh</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>mph</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QHighlightLineEdit" name="theSpeed2Value">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>Speed:</string>
+          </property>
+         </widget>
         </item>
-        <item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Altitude:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>Apogee:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QHighlightLineEdit" name="theSpeed1Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_18">
+          <property name="text">
+           <string>kmh</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>18</width>
+            <width>40</width>
             <height>20</height>
            </size>
           </property>
          </spacer>
         </item>
-        <item>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="1" column="1">
-           <widget class="QHighlightLineEdit" name="theAltitude2Value">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QHighlightLineEdit" name="theAltitude1Value">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_21">
-            <property name="text">
-             <string>ft</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>m</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Altitude:</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+        <item row="1" column="3">
+         <widget class="QHighlightLineEdit" name="theAltitude1Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QHighlightLineEdit" name="theApogee1Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QLabel" name="label_20">
+          <property name="text">
+           <string>m</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QHighlightLineEdit" name="theSpeed2Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>mph</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QHighlightLineEdit" name="theAltitude2Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QHighlightLineEdit" name="theApogee2Value">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>ft</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

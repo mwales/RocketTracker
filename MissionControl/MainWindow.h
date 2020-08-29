@@ -30,6 +30,8 @@ protected slots:
 
    void heartbeat();
 
+   void sendCmd();
+
 protected:
 
    void logRawSerialData(QByteArray data);
@@ -43,6 +45,7 @@ protected:
    void processGpsFixReport(QByteArray decodedData);
    void processNumSatsReport(QByteArray decodedData);
    void processSpeedReport(QByteArray decodedData);
+   void processPeakAltitudeReport(QByteArray decodedData);
    void processRssiReport(QByteArray decodedData);
    void process2dFixAcquiredEvent(QByteArray decodedData);
    void process3dFixAcquiredEvent(QByteArray decodedData);
