@@ -14,6 +14,10 @@ void mdUpdateAltitude(char* alt);
 
 char* mdGetAltitude();
 
+char* mdGetPeakAltitude();
+void mdResetPeakAltitude();
+void mdPrintPeakAltitude();
+
 void mdUpdateBattery(float batteryLevel);
 
 char* mdGetBattery();

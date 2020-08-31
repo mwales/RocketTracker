@@ -15,6 +15,7 @@
 #define MC_GPS_FIX_ID      4
 #define MC_NUM_SATS_ID     5
 #define MC_SPEED_ID        6
+#define MC_PEAK_ALT_ID     7
 /**
  * LoRa messaging ICD
  *
@@ -43,6 +44,8 @@
  *      xx
  * 0x06 Speed Update kmh x 10
  *      xxxx
+ * 0x07 Peak Altitude
+ *      mmmmm
  * 0x0f RSSI Update (not sent over LoRa)
  *      xxx
  *      

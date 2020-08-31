@@ -1,6 +1,7 @@
 #include "MissionData.h"
 #include "Arduino.h"
 #include <string.h>
+#include <stdint.h>
 
 
 #define LAT_LONG_POS_REPORT_LEN 18
@@ -34,10 +35,20 @@ char* mdGetTimestamp()
 
 #define ALTITUDE_REPORT_LEN      7
 char mdLastAltitude[ALTITUDE_REPORT_LEN];
+char mdPeakAltitude[ALTITUDE_REPORT_LEN];
+
+float peakAltitude;
 
 void mdUpdateAltitude(char* alt)
 {
   float altFloat = atof(alt);
+
+  if (altFloat > peakAltitude)
+  {
+    // Update peak altitude if neccessary
+    peakAltitude = altFloat;
+  }
+  
   uint16_t metersTimes10 = altFloat * 10.0;
   snprintf(mdLastAltitude, ALTITUDE_REPORT_LEN, "%05d", metersTimes10);
 }
@@ -45,6 +56,32 @@ void mdUpdateAltitude(char* alt)
 char* mdGetAltitude()
 {
   return mdLastAltitude;
+}
+
+char* mdGetPeakAltitude()
+{
+  // We do conversion to string here cause we will do a lot during ascent
+  uint16_t metersTimes10 = peakAltitude * 10.0;
+  snprintf(mdPeakAltitude, ALTITUDE_REPORT_LEN, "%05d", metersTimes10);
+  return mdPeakAltitude;
+}
+
+
+
+void mdResetPeakAltitude()
+{
+  peakAltitude = -500.0;
+}
+
+void mdPrintPeakAltitude()
+{
+  uint16_t paIntTimes10 = peakAltitude * 10.0;
+  uint16_t wholePart = paIntTimes10 / 10;
+  uint16_t fracPart = paIntTimes10 % 10;
+  Serial.print("Peak Altitude = ");
+  Serial.print(wholePart);
+  Serial.print(".");
+  Serial.println(fracPart);
 }
 
 #define BATTERY_REPORT_LEN      10

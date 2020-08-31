@@ -66,6 +66,8 @@ char* messageTypeToString(uint8_t msgType)
       return "Num Sats";
     case 6:
       return "Speed";
+    case 7:
+      return "Peak Altitude";
     case 0x10:
       return "Event GPS 2D Fix Acquired";
     case 0x11:
@@ -237,7 +239,7 @@ void loraSetup()
 
   delay(100);
 
-  Serial.println("Feather LoRa TX Test!");
+  Serial.println("Rocket Tracker - Rocket Application");
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -265,4 +267,93 @@ void loraSetup()
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
+}
+
+
+void processMsg(uint8_t* ctBuf, uint8_t len, uint8_t rssi)
+{
+  Serial.println("\n\n");
+  Serial.print("** New Packet **  RSSI=");
+  Serial.println(rssi);
+  
+  // digitalWrite(LED, HIGH);
+  //RH_RF95::printBuffer("CT Received: ", ctBuf, len);    
+  
+  
+  // Serial.print("Got: ");
+  // Serial.println((char*)buf);
+  
+  if (len < 5)
+  {
+    Serial.println("Message missing header!");
+    return;
+  }
+  
+  if (len > 25)
+  {
+    Serial.println("Message too large for mission control");
+    return;
+  }
+  //uint8_t computeChecksum(char* buf, uint8_t bufLen)
+  char decMsg[16];
+  obfuscateData(decMsg, (char*) &ctBuf[5], ctBuf[2], len - 5);
+  uint8_t csCalc = computeChecksum( decMsg, len-5);
+  
+  //Serial.print("Checksum Provided=");
+  //Serial.print(ctBuf[4]);
+  //Serial.print("   Calculated=");
+  //Serial.print( (int) csCalc);
+
+  if (csCalc != ctBuf[4])
+  {
+    Serial.println("Checksum INVALID!");
+    return;
+  }
+  
+  Serial.println("Checksum OK");
+
+  // Print decrypted message
+  Serial.print("DestID=");
+  Serial.println((char) ctBuf[0]);
+  
+  Serial.print("SrcID=");
+  Serial.println((char) ctBuf[1]);
+
+  //Serial.print("MsgIndex=");
+  //Serial.println(ctBuf[2]);
+
+  Serial.print("MsgType=");
+  //Serial.print(ctBuf[3]);
+  Serial.print("=");
+  Serial.println(messageTypeToString(ctBuf[3]));  
+  
+  decMsg[len - 5] = 0;  // null terminate
+
+  Serial.print("DecMsg=");
+  Serial.println((char*)decMsg);  
+
+  //RH_RF95::printBuffer("PT: ", (char*) decMsg, len-5);
+ 
+  
+}
+
+void loraReceiveMessage()
+{
+  if (rf95.available())
+  {
+    // Should be a message for us now
+    uint8_t buf[16];
+    uint8_t decBuf[16];
+    uint8_t len = sizeof(buf);
+ 
+    if (rf95.recv(buf, &len))
+    {
+      uint8_t rssi = rf95.lastRssi();
+      processMsg(buf, len, rssi);
+    }
+    else
+    {
+      Serial.println("Receive failed");
+    }
+  }
 }

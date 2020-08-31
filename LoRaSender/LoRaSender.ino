@@ -30,7 +30,7 @@ uint8_t missionControlMsg = 0;
 void updateMissionControl()
 {
   
-   missionControlMsg = (missionControlMsg + 1) % 7;
+   missionControlMsg = (missionControlMsg + 1) % 8;
    switch(missionControlMsg)
    {
    case MC_TIMESTAMP_ID:
@@ -57,6 +57,9 @@ void updateMissionControl()
       return;
    case MC_SPEED_ID:
       loraSendMsg(MISSION_CNTRL_ID, ROCKET_ID, MC_SPEED_ID, mdGetSpeed(), true);
+      return;
+   case MC_PEAK_ALT_ID:
+      loraSendMsg(MISSION_CNTRL_ID, ROCKET_ID, MC_PEAK_ALT_ID, mdGetPeakAltitude(), true);
       return;
    }
 }
@@ -278,6 +281,19 @@ void handleDebugCommand(char* cmd)
     return;
   }
 
+    if (strcmp(cmd,"peak") == 0)
+  {
+    mdPrintPeakAltitude();
+    return;
+  }
+
+    if (strcmp(cmd,"rpeak") == 0)
+  {
+    mdResetPeakAltitude();
+    Serial.println("Reset peak altitude to -500");
+    return;
+  }
+
   // Show help
   Serial.println("**** HELP MENU ****");
   Serial.println("gpmtk  - getVer");
@@ -298,6 +314,8 @@ void handleDebugCommand(char* cmd)
   Serial.println("hello2 - send encrypted hello packet 2nd way");
   Serial.println("gpson  - turn GPS processing on");
   Serial.println("gpsoff - turn GPS processing off");
+  Serial.println("peak   - print peak altitude");
+  Serial.println("rpeak  - reset peak altitude");
 }
 
 void readDebugCommands()
